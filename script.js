@@ -1,71 +1,74 @@
-/**
- * To-Do List Application Script
- * Handles adding, displaying, and removing tasks using advanced DOM manipulation.
- */
-let tasks = [];
-
-// Load tasks from Local Storage and populate the list
-function loadTasks() {
-    const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-    tasks = storedTasks;
-    storedTasks.forEach(taskText => addTask(taskText, false));
-}
-
-// Save current tasks array to Local Storage
-function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-document.addEventListener('DOMContentLoaded', function () {
-    // Select DOM elements
-    const addButton = document.getElementById('add-task');
+document.addEventListener('DOMContentLoaded', () => {
+    const addButton = document.getElementById('add-task-btn');
     const taskInput = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
 
-    // Function to add a new task to the list
-    function addTask() {
-        // Retrieve and trim the input value
+    // Load tasks from localStorage on page load
+    loadTasks();
+
+    // Add task on button click
+    addButton.addEventListener('click', () => {
         const taskText = taskInput.value.trim();
-
-        // Check if the input is empty
-        if (taskText === "") {
-            alert('Please enter a task.');
-            return;
+        if (taskText) {
+            addTask(taskText);
+            taskInput.value = '';
+        } else {
+            alert("Please enter a task.");
         }
+    });
 
-        // Create a new list item for the task
+    // Add task on Enter key
+    taskInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            const taskText = taskInput.value.trim();
+            if (taskText) {
+                addTask(taskText);
+                taskInput.value = '';
+            } else {
+                alert("Please enter a task.");
+            }
+        }
+    });
+
+    // Function to add task to the DOM and localStorage
+    function addTask(taskText, save = true) {
         const li = document.createElement('li');
         li.textContent = taskText;
 
-        // Create a remove button for the task
         const removeBtn = document.createElement('button');
         removeBtn.textContent = 'Remove';
         removeBtn.className = 'remove-btn';
 
-        // Assign onclick event to remove the task
-        removeBtn.onclick = function () {
+        removeBtn.addEventListener('click', () => {
             taskList.removeChild(li);
-        };
+            removeFromStorage(taskText);
+        });
 
-        // Append the remove button to the list item
         li.appendChild(removeBtn);
-
-        // Append the list item to the task list
         taskList.appendChild(li);
 
-        // Clear the input field
-        taskInput.value = '';
+        if (save) {
+            saveToStorage(taskText);
+        }
     }
 
-    // Event listener for the Add Task button
-    addButton.addEventListener('click', addTask);
+    // Save a task to localStorage
+    function saveToStorage(taskText) {
+        const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        tasks.push(taskText);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
 
-    // Event listener for pressing Enter in the input field
-    taskInput.addEventListener('keypress', function (event) {
-        if (event.key === 'Enter') {
-            addTask();
-        }
-    });
+    // Remove a task from localStorage
+    function removeFromStorage(taskText) {
+        let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        tasks = tasks.filter(task => task !== taskText);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
 
-    // Optionally invoke addTask on DOMContentLoaded (if needed for initial data)
-    // addTask();
+    // Load all saved tasks from localStorage
+    function loadTasks() {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks.forEach(taskText => addTask(taskText, false));
+    }
 });
